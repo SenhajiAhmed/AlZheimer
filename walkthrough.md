@@ -2,7 +2,7 @@
 
 > **Project root:** `/home/senhajiahmed/Desktop/Projects/AlZheimer/`
 > **Goal:** Multimodal Alzheimer classification (MRI + Clinical data) with XAI & LLM reporting.
-> **Timeline target:** 48h sprint.
+> **Status:** Phase 4 Complete — Ready for Demo 🚀
 
 ---
 
@@ -10,7 +10,7 @@
 
 - [x] **Step 1 — Project structure initialized** (folders + placeholder files created)
 - [x] **Step 2 — Environment configured** (`requirements.txt` created, venv instructions documented)
-- [x] **Step 3 — Kaggle data download script ready** (`data/download_data.sh` created with instructions)
+- [x] **Step 3 — Kaggle data download script ready** (`data/download_data.sh` updated with working slug)
 - [x] **Step 4 — Synthetic tabular data generator written** (`data/generate_synthetic.py` created and executable)
 - [x] **Step 5 — Git repository initialized** (`.gitignore` + initial commit `0f166b7` done)
 
@@ -39,37 +39,35 @@
 ## Phase 3 — XAI & Generative Reporting
 
 - [x] Grad-CAM (ResNet) or Attention Rollout (ViT) implemented (`src/explain.py`)
-- [/] Heatmap overlay saved as image artifact
-- [ ] LLM prompt template written
-- [ ] LLM API integration working (returns structured clinical note)
+- [x] Heatmap overlay saved as image artifact
+- [x] LLM prompt template written (`src/report.py`)
+- [x] LLM API integration working (returns structured clinical note)
 
 ---
 
 ## Phase 4 — UI & API
 
-- [ ] FastAPI `/predict` endpoint built (`api/main.py`)
-- [ ] Streamlit dashboard built (`ui/app.py`)
-- [ ] MRI upload → prediction → heatmap → report flow working end-to-end
-- [ ] Local demo tested and passing
+- [x] FastAPI `/predict` endpoint built (`api/main.py`)
+- [x] Streamlit dashboard built (`ui/app.py`)
+- [x] MRI upload → prediction → heatmap → report flow working end-to-end
+- [x] Local demo tested and passing
 
 ---
 
 ## Phase 5 — Polish
 
-- [ ] README.md finalized
+- [x] README.md finalized
 - [ ] Deployed to Hugging Face Spaces or Streamlit Cloud
 - [ ] Pitch narrative drafted
 - [ ] Technical executive summary written (LaTeX optional)
 
 ---
 
----
-
-## 🗒 Next Session — Start Here
-
-> **Phase 1** is next: implement `src/data_loader.py` (custom `AlzheimerDataset`), then fine-tune the frozen ViT/ResNet baseline.
-> Run `data/download_data.sh` first if `data/raw/` is empty.
+## 🏁 Final Project Artifacts
+*   **Model:** `outputs/best_vit_1778424559.pt`
+*   **XAI:** `outputs/xai/` (Heatmaps generated on-the-fly)
+*   **Dashboard:** `streamlit run ui/app.py`
 
 ---
 
-*Last updated: 2026-05-10 — T-0 complete ✅*
+*Last updated: 2026-05-10 — Phase 4 COMPLETE ✅*
