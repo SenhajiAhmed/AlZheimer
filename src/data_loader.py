@@ -47,8 +47,16 @@ CLASS_TO_IDX = {c: i for i, c in enumerate(CLASS_NAMES)}
 # ── Default paths (relative to project root) ──────────────────────────────────
 
 DATA_ROOT = Path(__file__).resolve().parent.parent / "data"
-RAW_ROOT  = DATA_ROOT / "raw" / "Alzheimer_s Dataset"
 TABULAR_CSV = DATA_ROOT / "synthetic_tabular.csv"
+
+def get_raw_root(data_root: Path) -> Path:
+    """Automatically find the directory containing 'train' and 'test' folders."""
+    raw_path = data_root / "raw"
+    # Look for any subdirectory that contains a 'train' folder
+    for p in raw_path.rglob("train"):
+        if p.is_dir():
+            return p.parent
+    return raw_path  # Fallback
 
 # ── ImageNet normalisation (works for grayscale→3ch MRI too) ──────────────────
 
@@ -170,7 +178,7 @@ def _prepare_tabular(csv_path: Path = TABULAR_CSV):
 
 
 def build_dataloaders(
-    raw_root: Path = RAW_ROOT,
+    data_root: Path = DATA_ROOT,
     tabular_csv: Path = TABULAR_CSV,
     val_size: float = 0.1,
     batch_size: int = 16,
@@ -187,6 +195,9 @@ def build_dataloaders(
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
+    # ── Find raw root automatically ──────────────────────────────────────────
+    raw_root = get_raw_root(data_root)
 
     # ── Collect all image paths per split ─────────────────────────────────────
     train_val_samples = _collect_image_paths(raw_root, "train")
