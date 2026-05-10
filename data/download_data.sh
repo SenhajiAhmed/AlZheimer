@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-DATASET="tourist55/alzheimers-dataset-4-class-of-images"
+DATASET="sachinkumar413/alzheimer-mri-dataset"
 RAW_DIR="$(dirname "$0")/raw"
 
 echo "==> Checking Kaggle CLI..."
