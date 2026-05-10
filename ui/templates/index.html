@@ -22,8 +22,18 @@
             </div>
             
             <p class="description">Clinical Test Scores & Demographics</p>
+
+            <!-- Metadata Toggle -->
+            <div class="toggle-row">
+                <label class="label-caps" for="use-metadata">Include Clinical Metadata</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="use-metadata" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
             
             <form id="diagnostic-form">
+                <div id="metadata-fields">
                 <div class="input-group">
                     <label class="label-caps" for="age">Age</label>
                     <input type="number" id="age" name="age" min="50" max="95" value="65" required class="glass-input">
@@ -56,6 +66,8 @@
                         <option value="1">Carrier (High Risk)</option>
                     </select>
                 </div>
+
+                </div><!-- end #metadata-fields -->
 
                 <button type="submit" class="btn-primary" id="analyze-btn">
                     RUN DIAGNOSTIC SCAN

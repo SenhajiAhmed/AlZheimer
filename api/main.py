@@ -58,12 +58,13 @@ def read_root():
 @app.post("/predict")
 async def predict(
     image: UploadFile = File(...),
-    age: float = Form(...),
-    mmse: float = Form(...),
-    cdr: float = Form(...),
-    education_years: float = Form(...),
-    apoe4: int = Form(...),
+    age: Optional[float] = Form(None),
+    mmse: Optional[float] = Form(None),
+    cdr: Optional[float] = Form(None),
+    education_years: Optional[float] = Form(None),
+    apoe4: Optional[int] = Form(None),
 ):
+    use_metadata = all(v is not None for v in [age, mmse, cdr, education_years, apoe4])
     if not CHECKPOINT:
         return {"error": "No model checkpoint found. Please train the model first."}
 
@@ -75,28 +76,35 @@ async def predict(
         buffer.write(await image.read())
 
     # 2. Run Inference & XAI
-    # Normalize ALL 5 features using the StandardScaler values from the training distribution
-    # Means: [70.215, 22.034, 0.808, 13.325, 0.415]
-    # Stds:  [8.319, 6.658, 0.699, 3.080, 0.493]
-    age_scaled = (age - 70.215) / 8.319
-    mmse_scaled = (mmse - 22.034) / 6.658
-    cdr_scaled = (cdr - 0.808) / 0.699
-    edu_scaled = (education_years - 13.325) / 3.080
-    apoe4_scaled = (apoe4 - 0.415) / 0.493
+    if use_metadata:
+        # Normalize ALL 5 features using the StandardScaler values from the training distribution
+        # Means: [70.215, 22.034, 0.808, 13.325, 0.415]
+        # Stds:  [8.319, 6.658, 0.699, 3.080, 0.493]
+        tabular_data = [
+            (age - 70.215) / 8.319,
+            (mmse - 22.034) / 6.658,
+            (cdr - 0.808) / 0.699,
+            (education_years - 13.325) / 3.080,
+            (apoe4 - 0.415) / 0.493,
+        ]
+    else:
+        # No metadata — pass zeros (training mean), model relies solely on MRI
+        tabular_data = [0.0, 0.0, 0.0, 0.0, 0.0]
 
     result = explain(
         image_path=str(image_path),
-        tabular_data=[age_scaled, mmse_scaled, cdr_scaled, edu_scaled, apoe4_scaled],
+        tabular_data=tabular_data,
         checkpoint_path=CHECKPOINT
     )
 
     # 3. Generate Clinical Report
     patient_data = {
-        "age": age,
-        "mmse": mmse,
-        "cdr": cdr,
-        "education_years": education_years,
-        "apoe4": apoe4
+        "age": age if use_metadata else None,
+        "mmse": mmse if use_metadata else None,
+        "cdr": cdr if use_metadata else None,
+        "education_years": education_years if use_metadata else None,
+        "apoe4": apoe4 if use_metadata else None,
+        "metadata_used": use_metadata,
     }
     
     report = generate_clinical_report(

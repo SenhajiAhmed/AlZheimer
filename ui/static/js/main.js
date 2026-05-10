@@ -8,12 +8,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingState = document.getElementById('loading-state');
     const resultsSection = document.getElementById('results-section');
     const analyzeBtn = document.getElementById('analyze-btn');
+    const metadataToggle = document.getElementById('use-metadata');
+    const metadataFields = document.getElementById('metadata-fields');
 
     const diagnosisText = document.getElementById('diagnosis-text');
     const confidenceRing = document.getElementById('confidence-ring');
     const confidenceText = document.getElementById('confidence-text');
     const heatmapImage = document.getElementById('heatmap-image');
     const reportContent = document.getElementById('llm-report');
+
+    // ── Toggle Logic ─────────────────────────────────────────────────────────
+    metadataToggle.addEventListener('change', () => {
+        if (metadataToggle.checked) {
+            metadataFields.classList.remove('disabled');
+        } else {
+            metadataFields.classList.add('disabled');
+        }
+    });
 
     // ── Drag & Drop Logic ────────────────────────────────────────────────────
     dropZone.addEventListener('dragover', (e) => {
@@ -63,14 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsSection.classList.add('hidden');
         loadingState.classList.remove('hidden');
 
-        // Build FormData payload matching FastAPI /predict endpoint
+        // Build FormData payload — only include metadata if toggle is ON
         const formData = new FormData();
         formData.append("image", imageInput.files[0]);
-        formData.append("age", document.getElementById('age').value);
-        formData.append("mmse", document.getElementById('mmse').value);
-        formData.append("cdr", document.getElementById('cdr').value);
-        formData.append("education_years", document.getElementById('education_years').value);
-        formData.append("apoe4", document.getElementById('apoe4').value);
+
+        if (metadataToggle.checked) {
+            formData.append("age", document.getElementById('age').value);
+            formData.append("mmse", document.getElementById('mmse').value);
+            formData.append("cdr", document.getElementById('cdr').value);
+            formData.append("education_years", document.getElementById('education_years').value);
+            formData.append("apoe4", document.getElementById('apoe4').value);
+        }
+        // If toggle is OFF, fields are simply omitted — API will detect nulls and use MRI-only mode
 
         try {
             // Call the FastAPI backend
