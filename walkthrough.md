@@ -28,18 +28,18 @@
 
 ## Phase 2 — Multimodal Fusion
 
-- [ ] MLP for tabular data built (`src/models/mlp.py`)
-- [ ] Late-fusion concatenation head built (`src/models/fusion.py`)
-- [ ] Combined training loop working end-to-end
-- [ ] F1-Score & Macro AUC-ROC evaluated on test set
-- [ ] Confusion matrix plotted and saved
+- [x] MLP for tabular data built (`src/models/mlp.py`)
+- [x] Late-fusion concatenation head built (`src/models/fusion.py`)
+- [x] Combined training loop working end-to-end
+- [x] F1-Score & Macro AUC-ROC evaluated on test set (94% F1, 99.4% AUC)
+- [x] Confusion matrix plotted and saved
 
 ---
 
 ## Phase 3 — XAI & Generative Reporting
 
-- [ ] Grad-CAM (ResNet) or Attention Rollout (ViT) implemented (`src/explain.py`)
-- [ ] Heatmap overlay saved as image artifact
+- [x] Grad-CAM (ResNet) or Attention Rollout (ViT) implemented (`src/explain.py`)
+- [/] Heatmap overlay saved as image artifact
 - [ ] LLM prompt template written
 - [ ] LLM API integration working (returns structured clinical note)
 
