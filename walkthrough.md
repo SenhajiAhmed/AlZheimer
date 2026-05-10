@@ -8,21 +8,21 @@
 
 ## Phase T-0 — Environment & Data Preparation
 
-- [ ] **Step 1 — Project structure initialized** (folders + placeholder files created)
-- [ ] **Step 2 — Environment configured** (`requirements.txt` created, venv instructions documented)
-- [ ] **Step 3 — Kaggle data download script ready** (`data/download_data.sh` created with instructions)
-- [ ] **Step 4 — Synthetic tabular data generator written** (`data/generate_synthetic.py` created and executable)
-- [ ] **Step 5 — Git repository initialized** (`.gitignore` + initial commit done)
+- [x] **Step 1 — Project structure initialized** (folders + placeholder files created)
+- [x] **Step 2 — Environment configured** (`requirements.txt` created, venv instructions documented)
+- [x] **Step 3 — Kaggle data download script ready** (`data/download_data.sh` created with instructions)
+- [x] **Step 4 — Synthetic tabular data generator written** (`data/generate_synthetic.py` created and executable)
+- [x] **Step 5 — Git repository initialized** (`.gitignore` + initial commit `0f166b7` done)
 
 ---
 
 ## Phase 1 — Baseline Image Model
 
-- [ ] Custom `Dataset` class written (`src/data_loader.py`)
-- [ ] Pretrained ViT or ResNet loaded with frozen backbone
-- [ ] Classification head replaced with Identity for feature extraction
-- [ ] Training loop implemented (`src/train.py`)
-- [ ] Baseline validation accuracy & F1 logged
+- [x] Custom `Dataset` class written (`src/data_loader.py`)
+- [x] Pretrained ViT or ResNet loaded with frozen backbone (`src/models/vision.py`)
+- [x] Classification head replaced with Identity for feature extraction
+- [x] Training loop implemented (`src/train.py`) — AMP, early stopping, checkpointing
+- [x] Baseline validation accuracy & F1 logged (outputs saved to `outputs/`)
 
 ---
 
@@ -63,4 +63,13 @@
 
 ---
 
-*Last updated: 2026-05-10*
+---
+
+## 🗒 Next Session — Start Here
+
+> **Phase 1** is next: implement `src/data_loader.py` (custom `AlzheimerDataset`), then fine-tune the frozen ViT/ResNet baseline.
+> Run `data/download_data.sh` first if `data/raw/` is empty.
+
+---
+
+*Last updated: 2026-05-10 — T-0 complete ✅*
