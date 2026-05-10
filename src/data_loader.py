@@ -122,11 +122,13 @@ class AlzheimerDataset(Dataset):
         tabular_df: pd.DataFrame,
         transform: Optional[transforms.Compose] = None,
         class_row_map: Optional[Dict[int, List[int]]] = None,
+        tabular_dropout: float = 0.0,
     ):
         self.samples = samples
         self.tabular = tabular_df
         self.transform = transform
         self.class_row_map = class_row_map or {}
+        self.tabular_dropout = tabular_dropout
 
         # Running counters so each class cycles through its tabular rows
         self._class_counters = {idx: 0 for idx in CLASS_TO_IDX.values()}
@@ -146,7 +148,12 @@ class AlzheimerDataset(Dataset):
         rows = self.class_row_map.get(label, list(range(len(self.tabular))))
         row_idx = rows[idx % len(rows)]
         tab_row = self.tabular.iloc[row_idx]
-        tabular = torch.tensor(tab_row.values.astype(np.float32), dtype=torch.float32)
+        
+        # Apply Tabular Dropout: Randomly zero out metadata to force Vision dependency
+        if self.tabular_dropout > 0 and random.random() < self.tabular_dropout:
+            tabular = torch.zeros(len(tab_row), dtype=torch.float32)
+        else:
+            tabular = torch.tensor(tab_row.values.astype(np.float32), dtype=torch.float32)
 
         return image, tabular, torch.tensor(label, dtype=torch.long)
 
@@ -184,6 +191,7 @@ def build_dataloaders(
     batch_size: int = 16,
     num_workers: int = 4,
     seed: int = 42,
+    tabular_dropout: float = 0.2,
 ) -> Tuple[DataLoader, DataLoader, DataLoader, dict]:
     """
     Build train / val / test DataLoaders.
@@ -223,9 +231,9 @@ def build_dataloaders(
     class_weights /= class_weights.sum()
 
     # ── Build Dataset objects ─────────────────────────────────────────────────
-    ds_train = AlzheimerDataset(train_samples, tabular_df, get_transforms("train"), class_row_map)
-    ds_val   = AlzheimerDataset(val_samples,   tabular_df, get_transforms("val"),   class_row_map)
-    ds_test  = AlzheimerDataset(test_samples,  tabular_df, get_transforms("test"),  class_row_map)
+    ds_train = AlzheimerDataset(train_samples, tabular_df, get_transforms("train"), class_row_map, tabular_dropout=tabular_dropout)
+    ds_val   = AlzheimerDataset(val_samples,   tabular_df, get_transforms("val"),   class_row_map, tabular_dropout=0.0)
+    ds_test  = AlzheimerDataset(test_samples,  tabular_df, get_transforms("test"),  class_row_map, tabular_dropout=0.0)
 
     loader_kwargs = dict(batch_size=batch_size, num_workers=num_workers, pin_memory=True)
 

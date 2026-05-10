@@ -175,6 +175,7 @@ def train(
     patience: int = 5,
     seed: int = 42,
     num_workers: int = 4,
+    tabular_dropout: float = 0.2,
 ) -> None:
     device = get_device()
     print(f"\n🖥  Device: {device}")
@@ -182,7 +183,7 @@ def train(
 
     # ── Data ─────────────────────────────────────────────────────────────────
     train_loader, val_loader, test_loader, meta = build_dataloaders(
-        batch_size=batch_size, num_workers=num_workers, seed=seed
+        batch_size=batch_size, num_workers=num_workers, seed=seed, tabular_dropout=tabular_dropout
     )
     class_weights = meta["class_weights"].to(device)
     tabular_dim   = meta["tabular_dim"]
@@ -292,6 +293,7 @@ if __name__ == "__main__":
     parser.add_argument("--patience",    type=int,   default=5)
     parser.add_argument("--seed",        type=int,   default=42)
     parser.add_argument("--num_workers", type=int,   default=4)
+    parser.add_argument("--tabular_dropout", type=float, default=0.2)
     args = parser.parse_args()
 
     train(
@@ -302,4 +304,5 @@ if __name__ == "__main__":
         patience=args.patience,
         seed=args.seed,
         num_workers=args.num_workers,
+        tabular_dropout=args.tabular_dropout,
     )
