@@ -61,7 +61,7 @@ def one_epoch_train(
     scaler_amp,
 ) -> float:
     """Run one training epoch. Returns mean loss."""
-    vision.eval()           # backbone stays frozen (eval mode = no dropout/BN update)
+    vision.train()          # backbone last 4 layers are now trainable
     tab_encoder.train()
     fusion.train()
 
@@ -75,17 +75,20 @@ def one_epoch_train(
         optimizer.zero_grad()
 
         with torch.amp.autocast(device_type=device.type, enabled=(device.type == "cuda")):
-            with torch.no_grad():
-                h_img = vision(images)          # frozen backbone
+            h_img  = vision(images)          # last 4 blocks are now differentiable
             h_tab  = tab_encoder(tabular)
             logits = fusion(h_img, h_tab)
             loss   = criterion(logits, labels)
 
         scaler_amp.scale(loss).backward()
         scaler_amp.unscale_(optimizer)
-        torch.nn.utils.clip_grad_norm_(
-            list(tab_encoder.parameters()) + list(fusion.parameters()), max_norm=1.0
+        # Clip gradients for ALL trainable params
+        all_params = (
+            list(vision.parameters()) +
+            list(tab_encoder.parameters()) +
+            list(fusion.parameters())
         )
+        torch.nn.utils.clip_grad_norm_(all_params, max_norm=1.0)
         scaler_amp.step(optimizer)
         scaler_amp.update()
 
@@ -175,7 +178,8 @@ def train(
     patience: int = 5,
     seed: int = 42,
     num_workers: int = 4,
-    tabular_dropout: float = 0.2,
+    tabular_dropout: float = 0.3,
+    unfreeze_last_n: int = 4,
 ) -> None:
     device = get_device()
     print(f"\n🖥  Device: {device}")
@@ -190,7 +194,8 @@ def train(
     class_names   = meta["class_names"]
 
     # ── Models ────────────────────────────────────────────────────────────────
-    vision      = VisionEncoder(backbone=backbone, freeze=True).to(device)
+    # Unfreeze the last `unfreeze_last_n` ViT blocks for fine-tuning
+    vision      = VisionEncoder(backbone=backbone, freeze=True, unfreeze_last_n=unfreeze_last_n).to(device)
     tab_encoder = TabularEncoder(input_dim=tabular_dim, embed_dim=64).to(device)
     fusion      = FusionClassifier(
         img_dim=BACKBONE_CONFIGS[backbone]["embed_dim"],
@@ -198,9 +203,17 @@ def train(
         num_classes=len(class_names),
     ).to(device)
 
-    # ── Optimiser: only train fusion head + tabular encoder ───────────────────
-    trainable_params = list(tab_encoder.parameters()) + list(fusion.parameters())
-    optimizer  = AdamW(trainable_params, lr=lr, weight_decay=weight_decay)
+    # ── Optimiser: differential LRs — backbone gets 100x smaller LR ──────────
+    backbone_params = [p for p in vision.parameters() if p.requires_grad]
+    head_params     = list(tab_encoder.parameters()) + list(fusion.parameters())
+    n_backbone_params = sum(p.numel() for p in backbone_params)
+    n_head_params     = sum(p.numel() for p in head_params)
+    print(f"    Trainable backbone params: {n_backbone_params:,} | Head params: {n_head_params:,}")
+
+    optimizer = AdamW([
+        {"params": backbone_params, "lr": lr * 0.01},   # 1e-5 for ViT layers
+        {"params": head_params,     "lr": lr},           # 1e-3 for fusion head
+    ], weight_decay=weight_decay)
     scheduler  = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     criterion  = nn.CrossEntropyLoss(weight=class_weights)
     amp_scaler = torch.amp.GradScaler(enabled=(device.type == "cuda"))
@@ -291,9 +304,11 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size",  type=int,   default=16)
     parser.add_argument("--lr",          type=float, default=1e-3)
     parser.add_argument("--patience",    type=int,   default=5)
-    parser.add_argument("--seed",        type=int,   default=42)
-    parser.add_argument("--num_workers", type=int,   default=4)
-    parser.add_argument("--tabular_dropout", type=float, default=0.2)
+    parser.add_argument("--seed",            type=int,   default=42)
+    parser.add_argument("--num_workers",     type=int,   default=4)
+    parser.add_argument("--tabular_dropout", type=float, default=0.3)
+    parser.add_argument("--unfreeze_last_n", type=int,   default=4,
+                        help="Unfreeze last N ViT transformer blocks for fine-tuning. 0=fully frozen.")
     args = parser.parse_args()
 
     train(
@@ -305,4 +320,5 @@ if __name__ == "__main__":
         seed=args.seed,
         num_workers=args.num_workers,
         tabular_dropout=args.tabular_dropout,
+        unfreeze_last_n=args.unfreeze_last_n,
     )

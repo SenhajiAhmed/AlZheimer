@@ -29,15 +29,17 @@ BACKBONE_CONFIGS = {
 
 class VisionEncoder(nn.Module):
     """
-    Frozen pretrained vision encoder.
+    Pretrained vision encoder with optional partial unfreezing.
 
     Args:
-        backbone:  "vit" | "resnet"
-        freeze:    If True (default), freezes all backbone parameters.
-                   Set to False only for fine-tuning (use very low LR ~1e-5).
+        backbone:        "vit" | "resnet"
+        freeze:          If True, freeze all backbone params. Overridden by unfreeze_last_n.
+        unfreeze_last_n: Unfreeze only the last N transformer blocks (ViT only).
+                         E.g. unfreeze_last_n=4 unfreezes encoder layers 8-11 + pooler.
+                         Set to 0 to use the freeze flag as-is.
     """
 
-    def __init__(self, backbone: str = "vit", freeze: bool = True):
+    def __init__(self, backbone: str = "vit", freeze: bool = True, unfreeze_last_n: int = 0):
         super().__init__()
 
         if backbone not in BACKBONE_CONFIGS:
@@ -47,13 +49,13 @@ class VisionEncoder(nn.Module):
         self.embed_dim = BACKBONE_CONFIGS[backbone]["embed_dim"]
 
         if backbone == "vit":
-            self._build_vit(freeze)
+            self._build_vit(freeze, unfreeze_last_n)
         else:
             self._build_resnet(freeze)
 
     # ── ViT ───────────────────────────────────────────────────────────────────
 
-    def _build_vit(self, freeze: bool) -> None:
+    def _build_vit(self, freeze: bool, unfreeze_last_n: int = 0) -> None:
         from transformers import ViTModel
 
         self.model = ViTModel.from_pretrained(
@@ -61,9 +63,26 @@ class VisionEncoder(nn.Module):
             add_pooling_layer=True,
             attn_implementation="eager"
         )
-        if freeze:
+        # Freeze everything first
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        if not freeze:
+            # Unfreeze entire backbone
             for param in self.model.parameters():
-                param.requires_grad = False
+                param.requires_grad = True
+        elif unfreeze_last_n > 0:
+            # Selectively unfreeze only the last N transformer encoder blocks + pooler
+            total_layers = len(self.model.encoder.layer)  # 12 for ViT-Base
+            unfreeze_from = max(0, total_layers - unfreeze_last_n)
+            for i, layer in enumerate(self.model.encoder.layer):
+                if i >= unfreeze_from:
+                    for param in layer.parameters():
+                        param.requires_grad = True
+            # Also unfreeze the pooler
+            for param in self.model.pooler.parameters():
+                param.requires_grad = True
+
         # Mark as feature extractor (output pooled [CLS] token)
         self._is_vit = True
 
