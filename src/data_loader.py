@@ -215,8 +215,10 @@ def build_dataloaders(
     # ── Compute class weights for imbalanced data ─────────────────────────────
     train_labels = [s[1] for s in train_samples]
     class_counts = np.bincount(train_labels, minlength=len(CLASS_NAMES))
+    
+    # Use square root of counts to dampen extreme weights for minority classes
     class_weights = torch.tensor(
-        1.0 / (class_counts + 1e-6), dtype=torch.float32
+        1.0 / np.sqrt(class_counts + 1e-6), dtype=torch.float32
     )
     class_weights /= class_weights.sum()
 
