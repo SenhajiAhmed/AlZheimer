@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroGlass | Medical AI</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="cockpit-container">
+        <!-- Sidebar: Patient Metadata -->
+        <aside class="sidebar glass-panel">
+            <div class="brand">
+                <div class="logo-icon"></div>
+                <h1>NeuroGlass AI</h1>
+            </div>
+            
+            <p class="description">Clinical Test Scores & Demographics</p>
+            
+            <form id="diagnostic-form">
+                <div class="input-group">
+                    <label class="label-caps" for="age">Age</label>
+                    <input type="number" id="age" name="age" min="50" max="95" value="65" required class="glass-input">
+                </div>
+
+                <div class="input-group">
+                    <label class="label-caps" for="mmse">MMSE Score (0-30)</label>
+                    <input type="number" id="mmse" name="mmse" min="0" max="30" value="24" required class="glass-input">
+                </div>
+
+                <div class="input-group">
+                    <label class="label-caps" for="cdr">Clinical Dementia Rating (CDR)</label>
+                    <select id="cdr" name="cdr" class="glass-input">
+                        <option value="0.0" selected>0.0 (Normal)</option>
+                        <option value="0.5">0.5 (Very Mild)</option>
+                        <option value="1.0">1.0 (Mild)</option>
+                        <option value="2.0">2.0 (Moderate)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="label-caps" for="education_years">Years of Education</label>
+                    <input type="number" id="education_years" name="education_years" min="1" max="25" value="12" required class="glass-input">
+                </div>
+
+                <div class="input-group">
+                    <label class="label-caps" for="apoe4">APOE4 Allele</label>
+                    <select id="apoe4" name="apoe4" class="glass-input">
+                        <option value="0" selected>Non-carrier</option>
+                        <option value="1">Carrier (High Risk)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary" id="analyze-btn">
+                    RUN DIAGNOSTIC SCAN
+                </button>
+            </form>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Upload Area -->
+            <section class="upload-section glass-panel" id="upload-panel">
+                <h2 class="headline-sm">1. Upload MRI Scan</h2>
+                <div class="drop-zone" id="drop-zone">
+                    <span class="drop-icon">⇪</span>
+                    <p class="body-lg">Drag & Drop MRI Image Here</p>
+                    <p class="body-md">or click to browse (JPG/PNG)</p>
+                    <input type="file" id="image" accept="image/png, image/jpeg" class="file-input">
+                </div>
+                <div id="image-preview-container" class="hidden">
+                    <img id="image-preview" src="" alt="MRI Preview">
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <section id="loading-state" class="hidden glass-panel">
+                <div class="scanner"></div>
+                <p class="label-caps">Analyzing Neural Pathways...</p>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" class="hidden">
+                <div class="results-grid">
+                    <!-- Gauge and Diagnosis -->
+                    <div class="glass-panel diagnostic-card">
+                        <h2 class="label-caps">Predicted Diagnosis</h2>
+                        <h3 id="diagnosis-text" class="headline-md">...</h3>
+                        
+                        <div class="gauge-container">
+                            <svg viewBox="0 0 100 100" class="radial-gauge">
+                                <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
+                                <circle class="gauge-fill" id="confidence-ring" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                            </svg>
+                            <div class="gauge-value" id="confidence-text">0%</div>
+                        </div>
+                        <p class="label-caps">AI Confidence</p>
+                    </div>
+
+                    <!-- Heatmap -->
+                    <div class="glass-panel heatmap-card">
+                        <h2 class="label-caps">XAI Attention Rollout</h2>
+                        <div class="heatmap-container">
+                            <img id="heatmap-image" src="" alt="Heatmap">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LLM Report -->
+                <div class="glass-panel report-card mt-gutter">
+                    <h2 class="label-caps">Generated Clinical Report</h2>
+                    <div id="llm-report" class="body-md report-content">
+                        <!-- Report injected here -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

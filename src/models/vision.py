@@ -59,6 +59,7 @@ class VisionEncoder(nn.Module):
         self.model = ViTModel.from_pretrained(
             "google/vit-base-patch16-224",
             add_pooling_layer=True,
+            attn_implementation="eager"
         )
         if freeze:
             for param in self.model.parameters():

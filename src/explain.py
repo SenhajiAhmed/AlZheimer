@@ -52,7 +52,7 @@ def attention_rollout(attentions, discard_ratio=0.9, head_fusion="mean"):
 
             I = torch.eye(attention_heads_fused.size(-1))
             a = (attention_heads_fused + I) / 2
-            a = a / a.sum(dim=-1).keepdim(True)
+            a = a / a.sum(dim=-1, keepdim=True)
 
             result = torch.matmul(a, result)
     
@@ -70,6 +70,7 @@ def generate_heatmap(image_path: Path, mask: np.ndarray, output_path: Path):
     img = cv2.imread(str(image_path))
     img = cv2.resize(img, (224, 224))
     
+    mask = cv2.resize(mask, (224, 224))
     heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
     heatmap = np.float32(heatmap) / 255
     
@@ -93,7 +94,7 @@ def explain(
     
     # ── Load Checkpoint ──────────────────────────────────────────────────────
     print(f"📦 Loading checkpoint from {checkpoint_path}...")
-    ckpt = torch.load(checkpoint_path, map_location=device)
+    ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     
     # ── Initialize Models ────────────────────────────────────────────────────
     vision = VisionEncoder(backbone=backbone, freeze=True).to(device)

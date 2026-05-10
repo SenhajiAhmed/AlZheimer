@@ -14,6 +14,7 @@ from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -21,6 +22,15 @@ from src.explain import explain
 from src.report import generate_clinical_report
 
 app = FastAPI(title="Diamond-Lite Alzheimer API")
+
+# Allow CORS for Flask frontend (port 5000)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins for demo purposes
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount outputs for static access to heatmaps
 OUTPUTS_DIR = Path("outputs")
@@ -65,10 +75,18 @@ async def predict(
         buffer.write(await image.read())
 
     # 2. Run Inference & XAI
-    # We use raw values here; the explain() function handles normalization
+    # Normalize ALL 5 features using the StandardScaler values from the training distribution
+    # Means: [70.215, 22.034, 0.808, 13.325, 0.415]
+    # Stds:  [8.319, 6.658, 0.699, 3.080, 0.493]
+    age_scaled = (age - 70.215) / 8.319
+    mmse_scaled = (mmse - 22.034) / 6.658
+    cdr_scaled = (cdr - 0.808) / 0.699
+    edu_scaled = (education_years - 13.325) / 3.080
+    apoe4_scaled = (apoe4 - 0.415) / 0.493
+
     result = explain(
         image_path=str(image_path),
-        tabular_data=[age, mmse, cdr, education_years, apoe4],
+        tabular_data=[age_scaled, mmse_scaled, cdr_scaled, edu_scaled, apoe4_scaled],
         checkpoint_path=CHECKPOINT
     )
 

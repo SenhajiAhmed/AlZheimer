@@ -47,8 +47,8 @@
 
 ## Phase 4 — UI & API
 
-- [x] FastAPI `/predict` endpoint built (`api/main.py`)
-- [x] Streamlit dashboard built (`ui/app.py`)
+- [x] FastAPI `/predict` endpoint built with CORS middleware (`api/main.py`)
+- [x] Streamlit dashboard replaced with custom Flask Glassmorphism UI (`ui/flask_app.py`, `index.html`, `style.css`, `main.js`)
 - [x] MRI upload → prediction → heatmap → report flow working end-to-end
 - [x] Local demo tested and passing
 
